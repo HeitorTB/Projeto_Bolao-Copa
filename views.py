@@ -30,9 +30,15 @@ class View:
             raise ValueError("usuario não encontrado")
         usuarioDAO.excluir(usuario)
 
-    def usuario_autenticar(email, senha):
+    @classmethod
+    def usuario_autenticar(cls, email, senha):
+        # Garante que o email digitado no login fique igual ao do banco (minúsculo)
+        email_digitado = email.lower().strip()
+        senha_digitada = str(senha).strip()
+        
         for c in View.usuario_listar():
-            if c.get_email() == email and c.get_senha() == senha:
+            # Tira possíveis espaços perdidos e compara
+            if c.get_email().strip() == email_digitado and c.get_senha().strip() == senha_digitada:
                 return {"id": c.get_id(), "nome": c.get_nome()}
         return None
     

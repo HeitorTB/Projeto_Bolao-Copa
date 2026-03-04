@@ -50,14 +50,20 @@ class usuarioDAO(DAO):
     @classmethod
     def listar(cls):
         df = cls.listar_aba("usuario")
-        # Forçamos a conversão para os tipos corretos: str (texto) e int (número)
-        return [Usuario(
-            int(row['id']), 
-            str(row['nome']), 
-            str(row['email']), 
-            str(row['senha']), 
-            int(row['pontos'])
-        ) for _, row in df.iterrows()]
+        
+        usuarios = []
+        for _, row in df.iterrows():
+            # Se o Pandas leu 1234.0, isso transforma de volta em "1234"
+            senha_limpa = str(row['senha']).removesuffix('.0')
+            
+            usuarios.append(Usuario(
+                int(row['id']), 
+                str(row['nome']), 
+                str(row['email']), 
+                senha_limpa, 
+                int(row['pontos'])
+            ))
+        return usuarios
 
     @classmethod
     def listar_id(cls, id):
@@ -65,12 +71,13 @@ class usuarioDAO(DAO):
         r = df[df['id'] == id]
         if not r.empty:
             row = r.iloc[0]
-            # Mesma coisa aqui, garantindo os formatos certos
+            senha_limpa = str(row['senha']).removesuffix('.0')
+            
             return Usuario(
                 int(row['id']), 
                 str(row['nome']), 
                 str(row['email']), 
-                str(row['senha']), 
+                senha_limpa, 
                 int(row['pontos'])
             )
         return None
