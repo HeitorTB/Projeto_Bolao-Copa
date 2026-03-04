@@ -1,22 +1,25 @@
-import sqlite3
-from datetime import datetime
+import streamlit as st
+from streamlit_gsheets import GSheetsConnection
 
 class DAO:
-    conn = None
-    nome_bd="tabela.db"
+    # Cria a conexão com o Google Sheets usando o cache do Streamlit
+    conn = st.connection("gsheets", type=GSheetsConnection)
 
     @classmethod
     def abrir(cls):
-        cls.conn = sqlite3.connect(cls.nome_bd)
-        cls.conn.execute("PRAGMA foreign_keys = ON")
+        # Não precisamos mais do sqlite3.connect
+        pass
 
     @classmethod
     def fechar(cls):
-        cls.conn.close()
-       
+        pass
+
     @classmethod
-    def execute(cls, sql, params = None):
-        cursor = cls.conn.cursor()
-        cursor.execute(sql, params or [])
-        cls.conn.commit()
-        return cursor
+    def listar_aba(cls, nome_aba):
+        # Lê os dados de uma aba específica da planilha
+        return cls.conn.read(worksheet=nome_aba, ttl="0") # ttl=0 evita cache antigo
+
+    @classmethod
+    def salvar_aba(cls, nome_aba, df):
+        # Sobrescreve a aba com os novos dados (INSERT/UPDATE/DELETE)
+        cls.conn.update(worksheet=nome_aba, data=df)

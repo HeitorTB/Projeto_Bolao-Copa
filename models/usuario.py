@@ -32,61 +32,38 @@ from dao_sql.DAO import DAO
 class usuarioDAO(DAO):
     @classmethod
     def inserir(cls, obj):
-        cls.abrir()
-        sql = """
-            INSERT INTO usuario (nome, email, senha, pontos)
-            VALUES (?, ?, ?, ?)
-        """
-        cls.execute(sql, (obj.get_nome(), obj.get_email(), obj.get_senha(), obj.get_pontos()))
-        cls.fechar()
+        df = cls.listar_aba("usuario")
+        novo_id = int(df["id"].max() + 1) if not df.empty else 1
+        
+        nova_linha = {
+            "id": novo_id,
+            "nome": obj.get_nome(),
+            "email": obj.get_email().lower(),
+            "senha": obj.get_senha(),
+            "pontos": obj.get_pontos()
+        }
+        
+        df = pd.concat([df, pd.DataFrame([nova_linha])], ignore_index=True)
+        cls.salvar_aba("usuario", df)
 
     @classmethod
     def listar(cls):
-        cls.abrir()
-        sql = "SELECT * FROM usuario"
-        cursor = cls.execute(sql)
-        rows = cursor.fetchall()
-        objs = [Usuario(id, nome, email, senha, pontos) for (id, nome, email, senha, pontos) in rows]
-        cls.fechar()
-        return objs
-
-    @classmethod
-    def listar_id(cls, id):
-        cls.abrir()
-        sql = "SELECT * FROM usuario WHERE id = ?"
-        cursor = cls.execute(sql, (id,))
-        row = cursor.fetchone()
-        obj = Usuario(*row) if row else None
-        cls.fechar()
-        return obj
+        df = cls.listar_aba("usuario")
+        return [Usuario(row['id'], row['nome'], row['email'], row['senha'], row['pontos']) 
+                for _, row in df.iterrows()]
 
     @classmethod
     def atualizar(cls, obj):
-        cls.abrir()
-        sql = """
-            UPDATE usuario SET nome=?, email=?, senha=?, pontos=?
-            WHERE id=?
-        """
-        cls.execute(sql, (obj.get_nome(), obj.get_email(), obj.get_senha(), obj.get_pontos(), obj.get_id()))
-        cls.fechar()
+        df = cls.listar_aba("usuario")
+        df.loc[df['id'] == obj.get_id(), ['nome', 'email', 'senha', 'pontos']] = \
+            [obj.get_nome(), obj.get_email(), obj.get_senha(), obj.get_pontos()]
+        cls.salvar_aba("usuario", df)
 
     @classmethod
-    def excluir(cls, obj):
-        cls.abrir()
-        sql = "DELETE FROM usuario WHERE id=?"
-        cls.execute(sql, (obj.get_id(),))
-        cls.fechar()
-
-    @classmethod
-    def atualizar_todos_pontos(cls):
-        cls.abrir()
-        sql = """
-            UPDATE usuario
-            SET pontos = (
-                SELECT COALESCE(SUM(pontos_ganhos), 0)
-                FROM palpites
-                WHERE usuario_id = usuario.id
-            )
-        """
-        cls.execute(sql)
-        cls.fechar()
+    def listar_id(cls, id):
+        df = cls.listar_aba("usuario")
+        row = df[df['id'] == id]
+        if not row.empty:
+            r = row.iloc[0]
+            return Usuario(r['id'], r['nome'], r['email'], r['senha'], r['pontos'])
+        return None

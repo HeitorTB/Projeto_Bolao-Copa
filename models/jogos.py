@@ -1,3 +1,4 @@
+import pandas as pd
 class Jogo:
     # Quando cadastramos um jogo, ele começa com 0 gols e finalizado=False
     def __init__(self, id, time_a, time_b, data_hora, gols_time_a=0, gols_time_b=0, finalizado=False):
@@ -21,48 +22,34 @@ from dao_sql.DAO import DAO
 class JogoDAO(DAO):
     @classmethod
     def inserir(cls, obj):
-        cls.abrir()
-        sql = """
-            INSERT INTO jogos (time_a, time_b, data_hora, gols_time_a, gols_time_b, finalizado)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """
-        cls.execute(sql, (
-            obj.get_time_a(),
-            obj.get_time_b(),
-            obj.get_data_hora(),
-            obj.get_gols_time_a(),
-            obj.get_gols_time_b(),
-            obj.get_finalizado()
-        ))
-        cls.fechar()
+        df = cls.listar_aba("jogos")
+        novo_id = int(df["id"].max() + 1) if not df.empty else 1
+        
+        nova_linha = {
+            "id": novo_id,
+            "time_a": obj.get_time_a(),
+            "time_b": obj.get_time_b(),
+            "data_hora": obj.get_data_hora(),
+            "gols_time_a": obj.get_gols_time_a(),
+            "gols_time_b": obj.get_gols_time_b(),
+            "finalizado": obj.get_finalizado()
+        }
+        
+        df = pd.concat([df, pd.DataFrame([nova_linha])], ignore_index=True)
+        cls.salvar_aba("jogos", df)
 
     @classmethod
     def listar(cls):
-        cls.abrir()
-        sql = "SELECT id, time_a, time_b, data_hora, gols_time_a, gols_time_b, finalizado FROM jogos"
-        cursor = cls.execute(sql)
-        rows = cursor.fetchall()
-        # Cria a lista de objetos Jogo a partir do banco
-        objs = [Jogo(*row) for row in rows]
-        cls.fechar()
-        return objs
+        df = cls.listar_aba("jogos")
+        return [Jogo(r['id'], r['time_a'], r['time_b'], r['data_hora'], 
+                     r['gols_time_a'], r['gols_time_b'], bool(r['finalizado'])) 
+                for _, r in df.iterrows()]
 
     @classmethod
     def atualizar(cls, obj):
-        cls.abrir()
-        sql = """
-            UPDATE jogos
-            SET time_a = ?, time_b = ?, data_hora = ?,
-                gols_time_a = ?, gols_time_b = ?, finalizado = ?
-            WHERE id = ?
-        """
-        cls.execute(sql, (
-            obj.get_time_a(),
-            obj.get_time_b(),
-            obj.get_data_hora(),
-            obj.get_gols_time_a(),
-            obj.get_gols_time_b(),
-            obj.get_finalizado(),
-            obj.get_id() # O ID diz EXATAMENTE qual jogo estamos mudando
-        ))
-        cls.fechar()
+        df = cls.listar_aba("jogos")
+        df.loc[df['id'] == obj.get_id(), 
+               ['time_a', 'time_b', 'data_hora', 'gols_time_a', 'gols_time_b', 'finalizado']] = \
+            [obj.get_time_a(), obj.get_time_b(), obj.get_data_hora(), 
+             obj.get_gols_time_a(), obj.get_gols_time_b(), obj.get_finalizado()]
+        cls.salvar_aba("jogos", df)

@@ -7,13 +7,7 @@ from templates.apostasUI import MeusPalpitesUI
 from templates.FazerApostasUI import fazerApostasUI
 from templates.visualizarPlacarUI import VisualizarPlacarUI
 from views import View
-from dao_sql.database import database
 
-if __name__ == "__main__":
-    try:
-        database.criar_tabelas()
-    except Exception as e:
-        st.error(f"Erro ao conectar no banco {e}")
 class IndexUI: 
     
     @staticmethod

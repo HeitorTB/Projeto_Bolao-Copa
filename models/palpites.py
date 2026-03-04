@@ -1,4 +1,5 @@
 from dao_sql.DAO import DAO
+import pandas as pd
 class Palpite:
     # Adicionamos o pontos_ganhos, que começa valendo 0
     def __init__(self, id, usuario_id, jogo_id, gols_time_a, gols_time_b, pontos_ganhos=0):
@@ -19,43 +20,34 @@ class Palpite:
 class PalpiteDAO(DAO):
     @classmethod
     def inserir(cls, obj):
-        cls.abrir()
-        # Nomes exatos da sua imagem: usuario_id, jogo_id e pontos_ganhos
-        sql = """
-            INSERT INTO palpites (usuario_id, jogo_id, gols_time_a, gols_time_b, pontos_ganhos)
-            VALUES (?, ?, ?, ?, ?)
-        """
-        cls.execute(sql, (
-            obj.get_usuario_id(),
-            obj.get_jogo_id(),
-            obj.get_gols_time_a(),
-            obj.get_gols_time_b(),
-            obj.get_pontos_ganhos()
-        ))
-        cls.fechar()
+        df = cls.listar_aba("palpites")
+        novo_id = int(df["id"].max() + 1) if not df.empty else 1
+        
+        nova_linha = {
+            "id": novo_id,
+            "usuario_id": obj.get_usuario_id(),
+            "jogo_id": obj.get_jogo_id(),
+            "gols_time_a": obj.get_gols_time_a(),
+            "gols_time_b": obj.get_gols_time_b(),
+            "pontos_ganhos": obj.get_pontos_ganhos()
+        }
+        
+        df = pd.concat([df, pd.DataFrame([nova_linha])], ignore_index=True)
+        cls.salvar_aba("palpites", df)
 
     @classmethod
     def listar_por_usuario(cls, id_usuario):
-        cls.abrir()
-        sql = "SELECT id, usuario_id, jogo_id, gols_time_a, gols_time_b, pontos_ganhos FROM palpites WHERE usuario_id = ?"
-        cursor = cls.execute(sql, (id_usuario,))
-        rows = cursor.fetchall()
-        cls.fechar()
-        # Transforma as linhas do banco de dados em objetos Palpite
-        return [Palpite(*row) for row in rows]
-   
-    @classmethod
-    def listar_por_jogo(cls, id_jogo):
-        cls.abrir()
-        sql = "SELECT id, usuario_id, jogo_id, gols_time_a, gols_time_b, pontos_ganhos FROM palpites WHERE jogo_id = ?"
-        cursor = cls.execute(sql, (id_jogo,))
-        rows = cursor.fetchall()
-        cls.fechar()
-        return [Palpite(*row) for row in rows]
+        df = cls.listar_aba("palpites")
+        # Filtra as linhas onde usuario_id é igual ao id_usuario
+        filtro = df[df['usuario_id'] == id_usuario]
+        return [Palpite(r['id'], r['usuario_id'], r['jogo_id'], 
+                        r['gols_time_a'], r['gols_time_b'], r['pontos_ganhos']) 
+                for _, r in filtro.iterrows()]
 
     @classmethod
-    def atualizar_pontos(cls, id_palpite, pontos):
-        cls.abrir()
-        sql = "UPDATE palpites SET pontos_ganhos = ? WHERE id = ?"
-        cls.execute(sql, (pontos, id_palpite))
-        cls.fechar()
+    def listar_por_jogo(cls, id_jogo):
+        df = cls.listar_aba("palpites")
+        filtro = df[df['jogo_id'] == id_jogo]
+        return [Palpite(r['id'], r['usuario_id'], r['jogo_id'], 
+                        r['gols_time_a'], r['gols_time_b'], r['pontos_ganhos']) 
+                for _, r in filtro.iterrows()]
