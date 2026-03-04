@@ -17,7 +17,7 @@ class DAO:
     @classmethod
     def listar_aba(cls, nome_aba):
         # Lê os dados de uma aba específica da planilha
-        return cls.conn.read(worksheet=nome_aba, ttl="0") # ttl=0 evita cache antigo
+        return cls.conn.read(worksheet=nome_aba, ttl=0) # ttl=0 evita cache antigo
 
     @classmethod
     def salvar_aba(cls, nome_aba, df):
