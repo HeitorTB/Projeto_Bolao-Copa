@@ -43,6 +43,7 @@ class IndexUI:
     @staticmethod
     def main():
         IndexUI.sidebar()
+        View.criar_admin()
 
 if __name__ == "__main__":
     # View.criar_admin()  <-- COMENTE ESTA LINHA para testar
