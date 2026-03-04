@@ -1,3 +1,4 @@
+import pandas as pd
 class Usuario:
     def __init__(self, id, nome, email, senha, pontos):
         self.set_id(id)
