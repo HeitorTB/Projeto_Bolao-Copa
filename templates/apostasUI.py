@@ -33,7 +33,7 @@ class MeusPalpitesUI:
                 dados.append({
                     "Data": jogo.get_data_hora(),
                     "Time da Casa": jogo.get_time_a(),
-                    "Meu Palpite": f"{p.get_gols_time_a()} x {p.get_gols_time_b()}",
+                    "Meu Palpite": f"{int(p.get_gols_time_a())} x {int(p.get_gols_time_b())}",
                     "Time Visitante": jogo.get_time_b(),
                     "Status": status,
                     "Pontos Ganhos": p.get_pontos_ganhos()
