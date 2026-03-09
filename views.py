@@ -66,6 +66,9 @@ class View:
         novo_palpite = Palpite(0, usuario_id, jogo_id, gols_a, gols_b, 0)
         PalpiteDAO.inserir(novo_palpite)
 
+        import streamlit as st
+        st.cache_data.clear()
+
     @classmethod
     def palpite_listar_por_usuario(cls, usuario_id):
         palpites = PalpiteDAO.listar_por_usuario(usuario_id)
