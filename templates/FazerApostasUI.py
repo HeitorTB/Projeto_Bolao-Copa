@@ -1,65 +1,89 @@
 import streamlit as st
+import pandas as pd
 from views import View
 
-class fazerApostasUI:
+class ApostasUI:
     @classmethod
     def main(cls):
         st.header("Faça seus Palpites 🎯")
-        st.warning("⚠️ **Atenção:** Se você sair ou atualizar a página sem clicar em salvar, seu progresso será perdido!")
+        st.info("Preencha os placares diretamente na tabela abaixo. Clique na célula para digitar!")
 
-        # 1. Verifica quem é o usuário logado
         if "usuario_id" not in st.session_state:
-            st.error("Você precisa estar logado para fazer apostas!")
+            st.error("Você precisa estar logado!")
             return
 
         usuario_id = st.session_state["usuario_id"]
 
-        # 2. Busca todos os jogos e os palpites que o usuário JÁ FEZ
+        # 1. Puxar todos os jogos e os palpites que o usuário já fez (se houver)
         todos_jogos = View.jogo_listar()
         meus_palpites = View.palpite_listar_por_usuario(usuario_id)
         
-        # Cria uma lista apenas com os IDs dos jogos que ele já apostou
-        jogos_apostados_ids = [p.get_jogo_id() for p in meus_palpites]
+        # Criar um dicionário rápido para saber se já tem palpite para o jogo
+        dic_palpites = {p.get_jogo_id(): p for p in meus_palpites}
 
-        # Só pega os jogos abertos e que NÃO estão na lista de apostados
-        jogos_abertos = [j for j in todos_jogos if not j.get_finalizado() and j.get_id() not in jogos_apostados_ids]
+        # 2. Montar os dados para a Tabela
+        dados = []
+        for jogo in todos_jogos:
+            # Vamos mostrar apenas os jogos que ainda não estão finalizados
+            if not jogo.get_finalizado():
+                palpite = dic_palpites.get(jogo.get_id())
+                
+                # Se já tiver palpite, puxa os gols. Se não, deixa vazio (None)
+                gols_a = int(palpite.get_gols_time_a()) if palpite else None
+                gols_b = int(palpite.get_gols_time_b()) if palpite else None
 
-        if not jogos_abertos:
-            st.success("Você já palpitou em todos os jogos disponíveis! Acompanhe na aba 'Minhas Apostas'.")
+                dados.append({
+                    "ID": jogo.get_id(), # Vamos esconder essa coluna depois
+                    "Data/Hora": jogo.get_data_hora(),
+                    "Casa": jogo.get_time_a(),
+                    "Gols Casa": gols_a,
+                    "X": "X",
+                    "Gols Visit": gols_b,
+                    "Visitante": jogo.get_time_b()
+                })
+
+        if not dados:
+            st.success("Não há jogos abertos para palpitar no momento!")
             return
 
-        # 3. Cria o formulário apenas para os jogos que sobraram
-        with st.form("form_apostas"):           
-            palpites_digitados = {}
-            
-            for jogo in jogos_abertos:
-                # O container com borda deixa cada jogo parecendo um "Card" de aplicativo
-                with st.container(border=True):
-                    st.caption(f"📅 **{jogo.get_data_hora()}**")
-                    
-                    # LINHA 1: Time A e Caixa de Gol A
-                    colA1, colA2 = st.columns([3, 1], vertical_alignment="center")
-                    with colA1:
-                        st.markdown(f"<h5 style='margin: 0;'>{jogo.get_time_a()}</h5>", unsafe_allow_html=True)
-                    with colA2:
-                        gols_a = st.number_input("A", min_value=0, step=1, key=f"gols_a_{jogo.get_id()}", label_visibility="collapsed")
-                    
-                    # LINHA 2: Time B e Caixa de Gol B
-                    colB1, colB2 = st.columns([3, 1], vertical_alignment="center")
-                    with colB1:
-                        st.markdown(f"<h5 style='margin: 0;'>{jogo.get_time_b()}</h5>", unsafe_allow_html=True)
-                    with colB2:
-                        gols_b = st.number_input("B", min_value=0, step=1, key=f"gols_b_{jogo.get_id()}", label_visibility="collapsed")
-                    
-                # Salva no dicionário
-                palpites_digitados[jogo.get_id()] = {"gols_a": gols_a, "gols_b": gols_b}
+        df = pd.DataFrame(dados)
 
-            # Botão de salvar
-            submit = st.form_submit_button("Salvar Meus Palpites", use_container_width=True)
-
-            if submit:
-                for jogo_id, placar in palpites_digitados.items():
-                    View.palpite_inserir(usuario_id, jogo_id, placar["gols_a"], placar["gols_b"])
+        # 3. A MÁGICA: st.data_editor cria a tabela editável
+        df_editado = st.data_editor(
+            df,
+            hide_index=True,
+            use_container_width=True,
+            height=600, # Altura boa para ver vários jogos de uma vez
+            column_config={
+                "ID": None, # Isso esconde o ID do jogo do usuário
+                "Data/Hora": st.column_config.TextColumn("Data", disabled=True),
+                "Casa": st.column_config.TextColumn("Mandante", disabled=True),
+                "X": st.column_config.TextColumn("", disabled=True), # Apenas decorativo
+                "Visitante": st.column_config.TextColumn("Visitante", disabled=True),
                 
-                st.success("Palpite salvo com sucesso!")
-                st.rerun()
+                # AS ÚNICAS COLUNAS EDITÁVEIS:
+                "Gols Casa": st.column_config.NumberColumn(
+                    "Gols", min_value=0, max_value=20, step=1, format="%d"
+                ),
+                "Gols Visit": st.column_config.NumberColumn(
+                    "Gols", min_value=0, max_value=20, step=1, format="%d"
+                )
+            }
+        )
+
+        # 4. Botão para Salvar as edições da tabela de uma vez só
+        if st.button("Salvar Todos os Palpites", type="primary", use_container_width=True):
+            # Percorre a tabela que o usuário acabou de preencher/editar na tela
+            for index, row in df_editado.iterrows():
+                
+                # Só salva se ele preencheu OS DOIS placares (não estão vazios)
+                if pd.notna(row["Gols Casa"]) and pd.notna(row["Gols Visit"]):
+                    jogo_id = int(row["ID"])
+                    gols_a = int(row["Gols Casa"])
+                    gols_b = int(row["Gols Visit"])
+                    
+                    # Aqui você chama a sua função de inserir/atualizar o palpite
+                    View.palpite_inserir(usuario_id, jogo_id, gols_a, gols_b)
+            
+            st.success("Palpites salvos com sucesso!")
+            st.rerun() # Dá um refresh na tela para garantir
