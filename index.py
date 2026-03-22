@@ -29,7 +29,7 @@ class IndexUI:
         op = option_menu(
             menu_title=None,
             options=["Apostar", "Apostas", "Placar","Regras"],
-            icons=["trophy", "card-checklist", "list-ol"],
+            icons=["trophy", "card-checklist", "list-ol", "info-circle"],
             orientation="horizontal"
         )
         if op == "Apostar": fazerApostasUI.main()
