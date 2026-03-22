@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 from views import View
 
-class ApostasUI:
+class fazerApostasUI:
     @classmethod
     def main(cls):
         st.header("Faça seus Palpites 🎯")
