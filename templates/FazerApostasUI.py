@@ -29,11 +29,8 @@ class fazerApostasUI:
             return
 
         # 3. Cria o formulário apenas para os jogos que sobraram
-        with st.form("form_apostas"):
-            st.write("Preencha o placar para os próximos jogos:")
-            
+        with st.form("form_apostas"):           
             palpites_digitados = {}
-
             for jogo in jogos_abertos:
                 st.write(f"**Data da Partida: {jogo.get_data_hora()}**")
                 
@@ -49,9 +46,6 @@ class fazerApostasUI:
                     gols_b = st.number_input("", min_value=0, step=1, key=f"gols_b_{jogo.get_id()}")
                 with col5:
                     st.subheader(jogo.get_time_b())
-
-                st.write("---")
-                
                 # Guarda os gols digitados
                 palpites_digitados[jogo.get_id()] = {"gols_a": gols_a, "gols_b": gols_b}
 
@@ -59,11 +53,10 @@ class fazerApostasUI:
             submit = st.form_submit_button("Salvar Meus Palpites")
 
             if submit:
-                # Salva no banco de dados
                 for jogo_id, placar in palpites_digitados.items():
                     View.palpite_inserir(usuario_id, jogo_id, placar["gols_a"], placar["gols_b"])
                 
-                st.success("Palpites salvos com sucesso! 🍀")
+                st.success("Palpite salvo com sucesso!")
                 
                 # 4. A MÁGICA ACONTECE AQUI: Atualiza a tela para o jogo sumir na hora!
                 st.rerun()
