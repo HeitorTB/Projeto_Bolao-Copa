@@ -75,8 +75,13 @@ class View:
         jogos = JogoDAO.listar()
         dic_jogos = {j.get_id(): j for j in jogos}
 
+        atualizou_algo = False # Flag para saber se precisamos salvar no usuário
+        total_pontos_usuario = 0 # Vamos somar os pontos aqui
+
         for p in palpites:
             jogo = dic_jogos.get(p.get_jogo_id())
+            pontos_deste_palpite = int(p.get_pontos_ganhos())
+
             # Se o jogo estiver FINALIZADO na planilha, calculamos os pontos
             if jogo and jogo.get_finalizado():
                 pontos_calculados = cls.calcular_pontos(
@@ -85,10 +90,22 @@ class View:
                 )
                 
                 # Se o ponto salvo na planilha for diferente do cálculo, atualizamos a planilha
-                if int(p.get_pontos_ganhos()) != pontos_calculados:
+                if pontos_deste_palpite != pontos_calculados:
                     PalpiteDAO.atualizar_pontos(p.get_id(), pontos_calculados)
-                    # p.__pontos_ganhos = pontos_calculados # (Opcional)
-        
+                    pontos_deste_palpite = pontos_calculados # Atualiza para a soma final
+                    atualizou_algo = True
+            
+            # Vai somando os pontos válidos de todos os palpites
+            total_pontos_usuario += pontos_deste_palpite
+
+        # --- A MÁGICA NOVA ENTRA AQUI ---
+        # Se algum palpite mudou de pontuação, atualizamos a aba do usuário!
+        if atualizou_algo:
+            usuario = usuarioDAO.listar_id(usuario_id)
+            if usuario:
+                usuario.set_pontos(total_pontos_usuario)
+                usuarioDAO.atualizar(usuario)
+                
         return palpites
     
     @classmethod
