@@ -32,7 +32,6 @@ class fazerApostasUI:
         with st.form("form_apostas"):           
             palpites_digitados = {}
             for jogo in jogos_abertos:
-                st.write(f"{jogo.get_data_hora()}")
                 
                 col1, col2, col3, col4, col5 = st.columns([2, 1, 1, 1, 2], vertical_alignment="center")
                 
@@ -46,7 +45,8 @@ class fazerApostasUI:
                     gols_b = st.number_input("", min_value=0, step=1, key=f"gols_b_{jogo.get_id()}")
                 with col5:
                     st.subheader(jogo.get_time_b())
-                # Guarda os gols digitados
+                
+                st.divider()
                 palpites_digitados[jogo.get_id()] = {"gols_a": gols_a, "gols_b": gols_b}
 
             # O botão de salvar
