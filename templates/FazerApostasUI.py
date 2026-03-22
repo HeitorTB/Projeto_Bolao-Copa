@@ -32,7 +32,7 @@ class fazerApostasUI:
         with st.form("form_apostas"):           
             palpites_digitados = {}
             for jogo in jogos_abertos:
-                st.write(f"**Data da Partida: {jogo.get_data_hora()}**")
+                st.write(f"{jogo.get_data_hora()}")
                 
                 col1, col2, col3, col4, col5 = st.columns([2, 1, 1, 1, 2], vertical_alignment="center")
                 
