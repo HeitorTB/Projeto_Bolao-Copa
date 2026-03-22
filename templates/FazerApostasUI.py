@@ -5,6 +5,7 @@ class fazerApostasUI:
     @classmethod
     def main(cls):
         st.header("Faça seus Palpites 🎯")
+        st.warning("Se você sair ou atualizar a página sem clicar em salvar meus palpites e cadastrar todos eles, o progresso será perdido! ")
 
         # 1. Verifica quem é o usuário logado
         if "usuario_id" not in st.session_state:
