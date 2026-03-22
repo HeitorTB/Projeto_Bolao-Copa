@@ -30,7 +30,18 @@ class IndexUI:
             menu_title=None,
             options=["Apostar", "Apostas", "Placar","Regras"],
             icons=["trophy", "card-checklist", "list-ol", "info-circle"],
-            orientation="horizontal"
+            orientation="horizontal",
+            styles={
+                # Força o menu a não jogar itens para baixo
+                "nav": {"flex-wrap": "nowrap"}, 
+                # Ajusta o tamanho da fonte e o espaçamento para caber certinho
+                "nav-link": {
+                    "font-size": "15px", 
+                    "text-align": "center", 
+                    "margin": "0px", 
+                    "padding": "10px 5px" 
+                }
+            }
         )
         if op == "Apostar": fazerApostasUI.main()
         if op == "Apostas": MeusPalpitesUI.main()
