@@ -28,8 +28,8 @@ class IndexUI:
     def menu_usuario():
         op = option_menu(
             menu_title=None,
-            options=["Apostar", "Apostas", "Ranking", "Jogos","Regras"],
-            icons=["trophy", "card-checklist", "list-ol", "info-circle"],
+            options=["Apostar", "Apostas", "Ranking","Regras"],
+            icons=["trophy", "card-checklist", "info-circle"],
             orientation="horizontal",
             styles={
                 # Força o menu a não jogar itens para baixo
