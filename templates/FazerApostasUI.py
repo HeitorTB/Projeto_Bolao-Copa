@@ -6,7 +6,7 @@ class fazerApostasUI:
     @classmethod
     def main(cls):
         st.header("Faça seus Palpites 🎯")
-        st.info("Preencha os placares diretamente na tabela abaixo. Clique na célula para digitar!")
+        st.info("Preencha os placares na tabela abaixo. Clique na célula para digitar!")
 
         if "usuario_id" not in st.session_state:
             st.error("Você precisa estar logado!")
