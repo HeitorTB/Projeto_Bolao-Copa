@@ -14,7 +14,9 @@ class View:
         for c in usuarioDAO.listar():
             if c.get_email() == email.lower():
                 raise ValueError("Já existe um usuário com esse email")
-        usuario = Usuario(0, nome, email, senha, 0)
+        
+        # A MUDANÇA AQUI: Adicionamos o "Pendente" como o 6º atributo do usuário
+        usuario = Usuario(0, nome, email, senha, 0, "Pendente")
         usuarioDAO.inserir(usuario)
 
     @classmethod
@@ -23,7 +25,13 @@ class View:
         senha_digitada = str(senha).strip()
         for c in cls.usuario_listar():
             if c.get_email().strip() == email_digitado and c.get_senha().strip() == senha_digitada:
-                return {"id": c.get_id(), "nome": c.get_nome()}
+                
+                # A MUDANÇA AQUI: Agora o login também devolve o status do usuário!
+                return {
+                    "id": c.get_id(), 
+                    "nome": c.get_nome(),
+                    "status": c.get_status() # Vamos criar isso no passo 2
+                }
         return None
 
     # --- REGRAS DE PONTUAÇÃO (A lógica que você pediu) ---

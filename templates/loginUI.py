@@ -14,6 +14,7 @@ class LoginUI:
                 st.session_state["usuario_tipo"] = "logado"
                 st.session_state['usuario_id'] = c["id"]
                 st.session_state["usuario_nome"] = c["nome"]
+                st.session_state["status"] = c["status"]
                 st.success("Login realizado com sucesso!")
                 st.rerun()
             else:

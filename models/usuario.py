@@ -1,11 +1,12 @@
 import pandas as pd
 class Usuario:
-    def __init__(self, id, nome, email, senha, pontos):
+    def __init__(self, id, nome, email, senha, pontos, status):
         self.set_id(id)
         self.set_nome(nome)
         self.set_email(email)
         self.set_senha(senha)
         self.set_pontos(pontos)
+        self.set_status(status)
 
     def set_id(self, valor):
         self.__id = valor
@@ -23,11 +24,14 @@ class Usuario:
         self.__senha = valor
     def set_pontos(self, valor):
         self.__pontos = valor
+    def set_status(self, valor):
+        self.__status = valor
     def get_id(self): return self.__id
     def get_nome(self): return self.__nome
     def get_senha(self): return self.__senha
     def get_email(self): return self.__email
     def get_pontos(self): return self.__pontos
+    def get_status(self): return self.__status
 
 from dao_sql.DAO import DAO
 class usuarioDAO(DAO):
@@ -41,7 +45,8 @@ class usuarioDAO(DAO):
             "nome": obj.get_nome(),
             "email": obj.get_email().lower(),
             "senha": obj.get_senha(),
-            "pontos": obj.get_pontos()
+            "pontos": obj.get_pontos(),
+            "status": obj.get_status()
         }
         
         df = pd.concat([df, pd.DataFrame([nova_linha])], ignore_index=True)
@@ -61,7 +66,8 @@ class usuarioDAO(DAO):
                 str(row['nome']), 
                 str(row['email']), 
                 senha_limpa, 
-                int(row['pontos'])
+                int(row['pontos']),
+                str(row['status'])
             ))
         return usuarios
 
@@ -78,13 +84,14 @@ class usuarioDAO(DAO):
                 str(row['nome']), 
                 str(row['email']), 
                 senha_limpa, 
-                int(row['pontos'])
+                int(row['pontos']),
+                str(row['status'])
             )
         return None
 
     @classmethod
     def atualizar(cls, obj):
         df = cls.listar_aba("usuario")
-        df.loc[df['id'] == obj.get_id(), ['nome', 'email', 'senha', 'pontos']] = \
-            [obj.get_nome(), obj.get_email(), obj.get_senha(), obj.get_pontos()]
+        df.loc[df['id'] == obj.get_id(), ['nome', 'email', 'senha', 'pontos', 'status']] = \
+            [obj.get_nome(), obj.get_email(), obj.get_senha(), obj.get_pontos(), obj.get_status()]
         cls.salvar_aba("usuario", df)
