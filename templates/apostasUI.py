@@ -72,7 +72,7 @@ class MeusPalpitesUI:
                     pontos = palpite.get_pontos_ganhos()
                     
                     st.markdown(f"<div style='text-align: center; font-size: 14px;'>Placar Oficial: <b>{oficial_gols_a} x {oficial_gols_b}</b></div>", unsafe_allow_html=True)
-                    st.markdown(f"<div style='text-align: center; color: #28a745; font-size: 16px;'><b>🎯 Pontos: {pontos}</b></div>", unsafe_allow_html=True)
+                    st.markdown(f"<div style='text-align: center; color: #28a745; font-size: 14px;'><b>Pontos: {pontos}</b></div>", unsafe_allow_html=True)
                 else:
                     st.markdown("<div style='text-align: center; font-size: 13px; color: gray;'>⏳ Aguardando resultado...</div>", unsafe_allow_html=True)
 
