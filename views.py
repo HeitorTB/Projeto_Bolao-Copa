@@ -1,6 +1,7 @@
 from models.usuario import Usuario, usuarioDAO
 from models.jogos import Jogo, JogoDAO
 from models.palpites import PalpiteDAO, Palpite
+import pandas as pd
 
 class View:
     
