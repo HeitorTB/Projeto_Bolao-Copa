@@ -66,7 +66,7 @@ class usuarioDAO(DAO):
                 str(row['nome']), 
                 str(row['email']), 
                 senha_limpa, 
-                int(row.get(col_pontos, 0)), # Usando a coluna correta blindada
+                int(row.iloc[6]),
                 str(row['status'])
             ))
         return usuarios
