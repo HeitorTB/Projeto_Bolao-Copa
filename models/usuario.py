@@ -38,36 +38,23 @@ class Usuario:
 
 class usuarioDAO(DAO):
     @classmethod
-    def inserir(cls, obj):
-        df = cls.listar_aba("usuario")
-        novo_id = int(df["id"].max() + 1) if not df.empty else 1
-        
-        nova_linha = {
-            "id": novo_id,
-            "nome": obj.get_nome(),
-            "email": obj.get_email().lower(),
-            "senha": obj.get_senha(),
-            "pontos": obj.get_pontos(),
-            "status": obj.get_status()
-        }
-        
-        # O Pandas mais novo prefere pd.concat para adicionar linhas
-        if df.empty:
-             df = pd.DataFrame([nova_linha])
-        else:
-             df = pd.concat([df, pd.DataFrame([nova_linha])], ignore_index=True)
-             
-        cls.salvar_aba("usuario", df)
-
-    @classmethod
     def listar(cls):
         df = cls.listar_aba("usuario")
         
-        # BLINDAGEM: Se a coluna status não existir na planilha, ele cria ela com "Pendente"
+        # --- A MÁGICA DA BLINDAGEM CONTRA O NaN COMEÇA AQUI ---
+        # 1. Remove linhas "fantasmas" (se não tem ID, não é um usuário de verdade)
+        if 'id' in df.columns:
+            df = df.dropna(subset=['id'])
+            
+        # 2. Garante que os pontos não fiquem vazios (NaN)
+        col_pontos = 'Pontos' if 'Pontos' in df.columns else 'pontos'
+        if col_pontos in df.columns:
+            df[col_pontos] = df[col_pontos].fillna(0)
+        # -------------------------------------------------------
+
+        # BLINDAGEM DO STATUS
         if "status" not in df.columns:
             df["status"] = "Pendente"
-            
-        # BLINDAGEM: Se a pessoa existir na planilha mas o status estiver em branco (NaN), coloca Pendente
         df["status"] = df["status"].fillna("Pendente")
 
         usuarios = []
@@ -79,10 +66,36 @@ class usuarioDAO(DAO):
                 str(row['nome']), 
                 str(row['email']), 
                 senha_limpa, 
-                int(row.get('Pontos', 0)),
-                str(row['status']) # Agora é seguro ler
+                int(row.get(col_pontos, 0)), # Usando a coluna correta blindada
+                str(row['status'])
             ))
         return usuarios
+
+    @classmethod
+    def inserir(cls, obj):
+        df = cls.listar_aba("usuario")
+        
+        # BLINDAGEM PARA O ID: Remove linhas vazias antes de calcular o novo ID
+        if 'id' in df.columns:
+            df = df.dropna(subset=['id'])
+            
+        novo_id = int(df["id"].max() + 1) if not df.empty else 1
+        
+        nova_linha = {
+            "id": novo_id,
+            "nome": obj.get_nome(),
+            "email": obj.get_email().lower(),
+            "senha": obj.get_senha(),
+            "pontos": obj.get_pontos(),
+            "status": obj.get_status()
+        }
+        
+        if df.empty:
+             df = pd.DataFrame([nova_linha])
+        else:
+             df = pd.concat([df, pd.DataFrame([nova_linha])], ignore_index=True)
+             
+        cls.salvar_aba("usuario", df)
 
     @classmethod
     def listar_id(cls, id):
