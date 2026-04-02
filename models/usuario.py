@@ -86,7 +86,7 @@ class usuarioDAO(DAO):
             "nome": obj.get_nome(),
             "email": obj.get_email().lower(),
             "senha": obj.get_senha(),
-            "pontos": obj.get_pontos(),
+            #"pontos": obj.get_pontos(),
             "status": obj.get_status()
         }
         
