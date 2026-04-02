@@ -5,10 +5,17 @@ class LoginUI:
     def main():
         st.header("Entrar")
         st.text("(Entre se você já fez o cadastro)")
-        email = st.text_input("Informe o e-mail")
-        senha = st.text_input("Informe a senha", type="password")
+        
+        # Cria o formulário de login
+        with st.form("form_login"):
+            email = st.text_input("Informe o e-mail")
+            senha = st.text_input("Informe a senha", type="password")
+            
+            # O botão de envio DEVE ser o form_submit_button
+            botao_entrar = st.form_submit_button("Entrar")
 
-        if st.button("Entrar"):
+        # A lógica acontece FORA do 'with st.form'
+        if botao_entrar:
             c = View.usuario_autenticar(email, senha)
             if c:
                 st.session_state["usuario_tipo"] = "logado"
@@ -19,5 +26,3 @@ class LoginUI:
                 st.rerun()
             else:
                 st.error("E-mail ou senha incorretos.")
-
-            
