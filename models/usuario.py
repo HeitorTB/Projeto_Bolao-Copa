@@ -42,17 +42,16 @@ class usuarioDAO(DAO):
         df = cls.listar_aba("usuario")
         
         # --- A MÁGICA DA BLINDAGEM CONTRA O NaN COMEÇA AQUI ---
-        # 1. Remove linhas "fantasmas" (se não tem ID, não é um usuário de verdade)
         if 'id' in df.columns:
             df = df.dropna(subset=['id'])
             
-        # 2. Garante que os pontos não fiquem vazios (NaN)
-        col_pontos = 'Pontos' if 'Pontos' in df.columns else 'pontos'
+        col_pontos = 'pontos' if 'pontos' in df.columns else 'Pontos'
         if col_pontos in df.columns:
-            df[col_pontos] = df[col_pontos].fillna(0)
+            df[col_pontos] = pd.to_numeric(df[col_pontos], errors='coerce').fillna(0)
+        else:
+            df['pontos'] = 0 # Previne erro caso a coluna suma
         # -------------------------------------------------------
 
-        # BLINDAGEM DO STATUS
         if "status" not in df.columns:
             df["status"] = "Pendente"
         df["status"] = df["status"].fillna("Pendente")
@@ -66,7 +65,7 @@ class usuarioDAO(DAO):
                 str(row['nome']), 
                 str(row['email']), 
                 senha_limpa, 
-                int(row.iloc[6]),
+                int(row['pontos']), # <--- CORRIGIDO AQUI (Evita o erro do iloc[6])
                 str(row['status'])
             ))
         return usuarios
@@ -133,11 +132,18 @@ class usuarioDAO(DAO):
     def atualizar(cls, obj):
         df = cls.listar_aba("usuario")
         
-        # Se for atualizar, garante que a coluna existe no DF
         if "status" not in df.columns:
             df["status"] = "Pendente"
             
-        df.loc[df['id'] == obj.get_id(), ['nome', 'email', 'senha', 'pontos', 'status']] = \
-            [obj.get_nome(), obj.get_email(), obj.get_senha(), obj.get_pontos(), obj.get_status()]
+        # 1. Atualiza apenas os campos que o usuário pode editar (sem os pontos)
+        df.loc[df['id'] == obj.get_id(), ['nome', 'email', 'senha', 'status']] = \
+            [obj.get_nome(), obj.get_email(), obj.get_senha(), obj.get_status()]
             
+        # 2. O PULO DO GATO REPLICADO
+        # Removemos a coluna pontos para o Sheets manter a ArrayFormula intacta
+        colunas_para_remover = ['pontos', 'Pontos', 'pontos_ganhos']
+        for col in colunas_para_remover:
+            if col in df.columns:
+                df = df.drop(columns=[col])
+                
         cls.salvar_aba("usuario", df)
